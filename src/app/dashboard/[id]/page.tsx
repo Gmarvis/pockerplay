@@ -106,26 +106,41 @@ export default function Page() {
     }
   });
 
-  socket.on("notify", (data) => {
-    if (data) {
-      // console.log("notify: ", data);
-      if (data.guessPlayer) {
-        console.log("guess player connected: ", data);
-        if (data.homePlayer.id === homePlayer.id) {
-          console.log("i am the home player");
-          localStorage.setItem(
-            "guess_player",
-            JSON.stringify(data.guessPlayer)
-          );
-        } else if (data.role === "guess_player") {
-          localStorage.setItem("home_player", JSON.stringify(data.guessPlayer));
-          localStorage.setItem("guess_player", JSON.stringify(data.homePlayer));
+   socket.on(
+    "notify",
+    (data: {
+      guessPlayer: any;
+      homePlayer: { id: string | undefined };
+      role: SetStateAction<string>;
+    }) => {
+      if (data) {
+        console.log("notify: ", data);
+        if (data.guessPlayer) {
+          console.log("guess player connected: ", data);
+          if (data.homePlayer.id === homePlayer.id) {
+            console.log("i am the home player");
+            localStorage.setItem(
+              "guess_player",
+              JSON.stringify(data.guessPlayer)
+            );
+            setRole(data.role);
+            localStorage.setItem("status", "home_player");
+          } else if (data.role === "guess_player") {
+            localStorage.setItem(
+              "home_player",
+              JSON.stringify(data.guessPlayer)
+            );
+            localStorage.setItem(
+              "guess_player",
+              JSON.stringify(data.homePlayer)
+            );
+            setRole(data.role);
+            localStorage.setItem("status", "guess_player");
+          }
         }
       }
-      setRole(data.role);
-      localStorage.setItem("status", role);
     }
-  });
+  );
   // console.log("guess player: ", guessPlayer);
   const handleGenerate = () => {
     const data = {
