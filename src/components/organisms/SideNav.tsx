@@ -11,10 +11,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function SideNav() {
+  const router = useRouter();
+
   const [openLogout, setOpenLogout] = useState(false);
   const [startNewGame, setStartNewGame] = useState(false);
-
-  const router = useRouter();
+  if (typeof localStorage === "undefined") return;
+  const myDms = JSON.parse(localStorage.getItem("myDM")!) || [];
 
   return (
     <div className="flex flex-col justify-between bg-themecolor w-[240px] h-[100vh] items-center py-2">
@@ -35,7 +37,20 @@ export default function SideNav() {
               New Game
             </button>
           </div>
-          <div> {/* <h2>users</h2> */}</div>
+          <div className=" px-2 flex flex-col justify-center items-center">
+            {" "}
+            <h2 className=" text-center">users</h2>
+            {myDms.length
+              ? myDms?.map((user: Partial<User>, i: number) => (
+                  <span
+                    key={i}
+                    className=" text-center text-[#f5f6f8] text-[11px]"
+                  >
+                    {user?.username}{" "}
+                  </span>
+                ))
+              : null}
+          </div>
         </div>
       </div>
 

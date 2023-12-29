@@ -14,7 +14,7 @@ interface DataType {
 
 const initialState: DataType = {
   currentGame: "",
-  setCurrentGame: () => null,
+  setCurrentGame: () => "",
 };
 
 const AppContext = createContext<DataType>(initialState);
@@ -26,7 +26,7 @@ export const AppContextProvider = ({ children }: any) => {
     currentGame,
     setCurrentGame,
   };
-  console.log(values);
+
   return <AppContext.Provider value={values}>{children}</AppContext.Provider>;
 };
 
