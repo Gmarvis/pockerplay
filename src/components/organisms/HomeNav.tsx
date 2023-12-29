@@ -27,13 +27,22 @@ const HomeNav = ({ hidden }: Props) => {
         alt=""
         width={200}
         height={100}
+        className="mobile:max-sm:hidden"
+      />
+
+      <Image
+        src={"/POCKERPLAY-LOGO copy.png"}
+        alt=""
+        width={100}
+        height={50}
+        className="mobile:max-sm:block hidden"
       />
       {!homePlayer?.id ? (
         <Link
           href={"/verification"}
           className={`border ${
             hidden ? "invisible" : "visible"
-          } border-lightPupple text-lightPupple rounded-full font-bold px-8 py-2`}
+          } border-lightPupple mobile:max-sm:text-[12px] mobile:max-sm:px-4 mobile:max-sm:py-1  text-lightPupple rounded-full font-bold px-8 py-2`}
         >
           Get Started
         </Link>
@@ -42,7 +51,7 @@ const HomeNav = ({ hidden }: Props) => {
           href={"/dashboard"}
           className={`border ${
             hidden ? "invisible" : "visible"
-          } border-lightPupple text-lightPupple rounded-full font-bold px-8 py-2`}
+          } border-lightPupple text-lightPupple rounded-full font-bold px-8 py-2 mobile:max-sm:text-[12px] mobile:max-sm:px-4 mobile:max-sm:py-1 `}
         >
           Dashboard
         </Link>

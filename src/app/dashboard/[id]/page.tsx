@@ -327,14 +327,16 @@ export default function Page() {
           </div>
 
           <div className="flex gap-3 items-center justify-center">
-            <Copy
-              gameUrl={gameUrl}
-              handleCopy={handleCopy}
-              image={selectedCard}
-            />
+            {!guessPlayer.id && (
+              <Copy
+                gameUrl={gameUrl}
+                handleCopy={handleCopy}
+                image={selectedCard}
+              />
+            )}
+
             {result(selectedCard, guessGuess) ? (
               <span>
-                {/* <FaCheck size={50} className="text-green-800 w-full mx-auto" /> */}
                 <FcCloseUpMode
                   size={50}
                   className="text-green-800 w-full mx-auto"

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CiLogout } from "react-icons/ci";
 import Overlay from "../atoms/Overlay";
 import Popups from "../atoms/Popups";
+import { useRouter } from "next/navigation";
 
 // React Icons
 import { IoClose } from "react-icons/io5";
@@ -14,6 +15,8 @@ type Props = {
 
 export default function MobileNav({ onClick }: Props) {
   const [openLogout, setOpenLogout] = useState(false);
+  const router = useRouter();
+
   return (
     <div className="flex flex-col justify-between bg-themecolor w-[100vw] h-[100vh] items-start py-2 px-4 z-40">
       <div className="text-white font-bold flex items-center justify-between w-full">
@@ -43,7 +46,10 @@ export default function MobileNav({ onClick }: Props) {
             content={"Are you sure you want to leave the Game?"}
             actionText={"Logout"}
             onCancel={() => setOpenLogout((prev) => !prev)}
-            onAction={() => setOpenLogout((prev) => !prev)}
+            onAction={() => {
+              localStorage.clear();
+              router.replace("/");
+            }}
             styles={"bg-themecolor text-white rounded"}
             actionBTNStyle={"border border-red-600 text-red-600"}
           />
