@@ -5,6 +5,10 @@ import Scores from "@/components/organisms/Scores";
 import { SetStateAction, useEffect, useState } from "react";
 
 // react icons
+import { FaCheck } from "react-icons/fa";
+import { GrClose } from "react-icons/gr";
+import { FcCloseUpMode } from "react-icons/fc";
+
 import { PiCopySimpleLight } from "react-icons/pi";
 import { toast } from "react-toastify";
 import { socket } from "@/utils/service/constant";
@@ -13,9 +17,12 @@ import { useParams, useRouter } from "next/navigation";
 
 import { public_call } from "@/utils/service/constant";
 import { useAppContext } from "@/app/Context/AppContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import Copy from "@/components/Copy";
+
 import Popups from "@/components/atoms/Popups";
 import Overlay from "@/components/atoms/Overlay";
+import { Socket } from "socket.io-client";
+import CardGuess from "@/components/atoms/CardGuess";
 
 export default function Page() {
   const router = useRouter();
@@ -24,8 +31,6 @@ export default function Page() {
   const [score, setScore] = useState<Score>();
   const [homePlayer, setHomePlayer] = useState<User>(() => {
     if (typeof localStorage !== "undefined") {
-      // console.log("checking made in the entering homplayer");
-
       return (
         JSON.parse(localStorage.getItem("home_player")!) || {
           name: "",
@@ -36,17 +41,19 @@ export default function Page() {
     } else return null;
   });
   const [guessPlayer, setGuessPlayer] = useState<User>(() => {
-    if (typeof localStorage !== "undefined") {
-      // console.log("checking made in the entering guessplayer");
-      if (localStorage.getItem("guess_player") !== "undefined")
-        return JSON.parse(localStorage.getItem("guess_player") || "{}");
+    if (
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("guess_player") !== "undefined" &&
+      localStorage.getItem("guess_player")
+    ) {
+      return JSON.parse(localStorage.getItem("guess_player") || "{}");
     } else return null;
   });
   const [round, setRound] = useState<Round>();
   const [homeChoice, setHomeChoice] = useState<string>("");
   const [guessChoice, setGuessChoice] = useState<string>("");
   const [guessGuess, setGuessGuess] = useState<string>("?");
-  const [homeGuess, setHomeGuess] = useState<string>("");
+  const [generateStatus, setGenerateStatus] = useState<string>("");
   const [category, setCategory] = useState<string>("words");
   const [numberOfOptions, setNumberOfOptions] = useState<number>(5);
   const [homeplayerHint, setHomePlayerHint] = useState<string>("");
@@ -54,57 +61,100 @@ export default function Page() {
   const [messagehint, setMessageHint] = useState<string>("");
   const [gameUrl, setGameUrl] = useState<string>("");
   const [choiceReceived, setChoiceReceived] = useState<boolean>(false);
-  const [guessReceived, setGuessReceived] = useState<string>("");
+  const [guessReceived, setGuessReceived] = useState<boolean>(false);
   const [game, setGame] = useState<GameSession>();
-  const [role, setRole] = useState<string>("");
+  const [role, setRole] = useState<string>((): any => {
+    if (typeof localStorage !== "undefined" && localStorage.getItem("status")) {
+      return localStorage.getItem("status");
+    }
+  });
   const [choiceMadeId, setChoiceMadeId] = useState<string>("");
-  const { setCurrentGame } = useAppContext();
+  const { setCurrentGame, isguess, setIsGuess } = useAppContext();
   const params = useParams();
   const [IsWinner, setwinner] = useState(false);
   const [isLooser, setIsLooser] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [EndOfRound, setEndOfRound] = useState(false);
-
-  let i: number = 1;
+  let counter: number = 0;
   useEffect(() => {
     if (
       !homePlayer?.id ||
       homePlayer === undefined ||
       !Object?.keys(homePlayer).length
     ) {
-      console.log("no home player");
+      //   console.log("no home player");
+      //   localStorage.setItem("currentGameSession", JSON.stringify(params.id));
+      setCurrentGame(params.id as string);
+      setIsGuess(true);
       return router.push("/verification");
     }
-    setGameUrl(`${public_call}/dashboard/${params.id}`);
 
-    if (guessPlayer)
+    if (!isguess) setGameUrl(`"${public_call}/dashboard/${params.id}"`);
+
+    if (homePlayer) {
       socket.emit("joingame", {
         gamesession_id: params.id,
         playerId: homePlayer?.id,
       });
-    socket.emit("myDM", {
-      id: homePlayer?.id,
-      gamesession_id: params.id,
+      socket.emit("myDM", {
+        id: homePlayer?.id,
+        gamesession_id: params.id,
+      });
+    }
+    socket.on("connection", () => {
+      console.log("socket connected successfully");
     });
-    localStorage.setItem("currentGameSession", JSON.stringify(params.id));
+
+    socket.on("error", (err: Error) => {
+      console.log("error", err);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("close");
+      setTimeout(() => socket.connect(), 100);
+    });
   }, [
     homePlayer?.id,
-    guessPlayer,
+    setCurrentGame,
+    setIsGuess,
     params,
     homePlayer,
-    gameUrl,
-    setCurrentGame,
     router,
+    isguess,
   ]);
+
+  useEffect(() => {
+    if (guessReceived && choiceReceived) setEndOfRound(true);
+  }, [guessReceived, choiceReceived]);
 
   socket.on("round", (data) => {
     if (data) {
       setRound(data.round);
-      setGenerataedData(data.proposals);
-    } else {
-      alert("only 5 round per game session allowed ");
+      if (data.proposals.length) setGenerataedData(data.proposals);
+      else {
+        setGenerateStatus("No data generated by the server");
+        return (
+          <>
+            <Overlay
+              onClick={() => setEndOfRound((prev) => !prev)}
+              transparent
+            />
+            <Popups
+              title={"Round in Progress"}
+              content={"No data generated by the server"}
+              actionText={""}
+              onCancel={() => setEndOfRound((prev) => !prev)}
+              onAction={() => setEndOfRound((prev) => !prev)}
+              styles={"bg-themecolor text-white"}
+              actionBTNStyle={""}
+            />
+          </>
+        );
+      }
     }
   });
+
+  // console.log("role", role);
 
   socket.on("notify", (data) => {
     if (data) {
@@ -117,50 +167,24 @@ export default function Page() {
             "guess_player",
             JSON.stringify(data.guessPlayer)
           );
-        } else if (data.role === "guess_player") {
+          setGuessPlayer(data.guessPlayer);
+          setRole("home_player");
+          localStorage.setItem("status", "home_player");
+          localStorage.setItem("conStatus", data.notify + " home_player");
+        } else {
           localStorage.setItem("home_player", JSON.stringify(data.guessPlayer));
+          setHomePlayer(data.guessPlayer);
           localStorage.setItem("guess_player", JSON.stringify(data.homePlayer));
+          setGuessPlayer(data.homePlayer);
+          setRole("guess_player");
+          localStorage.setItem("status", "guess_player");
+          localStorage.setItem("conStatus", data.notify + " guess_player");
         }
       }
+      // localStorage.setItem("conStatus", data.notify);
     }
   });
-  console.log(role);
-  socket.on(
-    "notify",
-    (data: {
-      guessPlayer: any;
-      homePlayer: { id: string | undefined };
-      role: SetStateAction<string>;
-    }) => {
-      if (data) {
-        console.log("notify: ", data);
-        if (data.guessPlayer) {
-          console.log("guess player connected: ", data);
-          if (data.homePlayer.id === homePlayer.id) {
-            console.log("i am the home player");
-            localStorage.setItem(
-              "guess_player",
-              JSON.stringify(data.guessPlayer)
-            );
-            setRole(data.role);
-            localStorage.setItem("status", role);
-          } else if (data.role === "guess_player") {
-            localStorage.setItem(
-              "home_player",
-              JSON.stringify(data.guessPlayer)
-            );
-            localStorage.setItem(
-              "guess_player",
-              JSON.stringify(data.homePlayer)
-            );
-            setRole(data.role);
-            localStorage.setItem("status", data.role);
-          }
-        }
-      }
-    }
-  );
-
+  // console.log(role);
   const handleGenerate = () => {
     const data = {
       home_player_id: homePlayer.id,
@@ -170,80 +194,104 @@ export default function Page() {
       round_number: round?.round_number ? round?.round_number + 1 : 1,
     };
     if (data.round_number > 5) {
-      alert("this is the end of game.");
+      setwinner(true);
       data.round_number = 1;
-      return;
+      return (
+        <Popups
+          title={"CONGRATULATIONS"}
+          content={"🌞👏👏👏"}
+          actionText={"NEW GAME"}
+          onCancel={() => setIsGameOver((prev) => !prev)}
+          onAction={function (): void {
+            throw new Error("Function not implemented.");
+          }}
+          styles={"border rounded"}
+          actionBTNStyle={"border text-themecolor"}
+        />
+      );
     }
     socket.emit("generate", data);
   };
+
   socket.on("receive_guess", (data) => {
     if (data) {
       console.log("receive_guess: ", data);
-      if (data.role === "home_player") {
-        setHomeGuess(data.guess);
-      } else if (data.role === "guess_player") {
-        setGuessGuess(data.guess);
-      }
+      setGuessGuess(data.guess);
       setScore(data.score);
-      console.log("check game state", data?.gameState);
+      setCategory(data.category);
+      setGuessReceived(true);
+      counter += 1;
+    }
+    if (counter === 2) {
+      // setEndOfRound(true);
+      counter = 1;
     }
   });
+
   socket.on("receive_choice", (data) => {
     if (data) {
       console.log("receive_choice: ", data);
-      if (data.role === "home_player") {
-        setGenerataedData(data.proposals);
-        setGuessPlayerHint(data.message);
-      } else if (data.role === "guess_player") {
-        setGenerataedData(data.proposals);
-        setHomePlayerHint(data.message);
-      }
+
+      setGenerataedData(data.proposals);
+
+      setMessageHint(data.message);
+
       setChoiceMadeId(data.choice);
+      setCategory(data.category);
+      setChoiceReceived(true);
+      setRound(data.round);
     }
-    setChoiceReceived(true);
   });
+
+  // console.log(category, round);
+  // console.log(choiceReceived, choiceMadeId);
+
   const sendChoiceOrGuess = () => {
+    if (!role || !round || !homePlayer || !guessPlayer) {
+      console.log(
+        `" no round ${round} id or no role ${role} or no home player ${homePlayer} or no guess_player ${guessPlayer}`
+      );
+      return;
+    }
+
     const choiceData = {
       gamesession_id: params.id,
-      round_id: round?.id,
+      round: round,
       message_hint: messagehint,
       player_choice: selectedCard,
       proposals: generatedData,
-      role: localStorage.getItem("status") || "",
-      player_id: guessPlayer
-        ? guessPlayer.id
-        : homePlayer
-        ? homePlayer.id
-        : undefined,
+      role: role,
+      player_id: role === "home_player" ? homePlayer?.id : guessPlayer?.id,
+      category,
     };
 
     const guessData = {
       round_id: round?.id,
       choice_id: choiceMadeId ? choiceMadeId : "",
       player_guess: selectedCard,
-      player_id: guessPlayer
-        ? guessPlayer.id
-        : homePlayer
-        ? homePlayer.id
-        : undefined,
-      role: localStorage.getItem("status") || "",
+      player_id: role === "home_player" ? homePlayer?.id : guessPlayer?.id,
+      role: role,
       gamesession_id: params.id,
+      category,
     };
 
-    if (!choiceReceived) {
-      console.log(choiceData);
-      socket.emit("send_choice", choiceData);
-    } else {
+    if (choiceMadeId || choiceReceived) {
       console.log(guessData);
       socket.emit("send_guess", guessData);
+      setChoiceMadeId("");
+      return setChoiceReceived(false);
+    } else {
+      console.log(choiceData);
+      return socket.emit("send_choice", choiceData);
     }
   };
-  socket.on("myDM", (data: string | any[]) => {
-    if (data.length) {
-      console.log("my dm ", data);
+  socket.on("myDM", (data) => {
+    if (data?.length) {
+      // console.log("my dm ", data);
       localStorage.setItem("myDM", JSON.stringify(data));
     }
   });
+
   const handleCopy = () => {
     toast.success("Copied!", {
       position: "top-right",
@@ -255,28 +303,40 @@ export default function Page() {
     console.log("endGame: ", data);
     if (data) {
       if (data.role === "home_player") {
-        setHomeGuess(data.guess);
+        setSelectedCard(data.guess);
       } else if (data.role === "guess_player") {
         setGuessGuess(data.guess);
       }
-      if (data.gameState === "END") alert("the game is finish! retry...");
+      if (data.gameState === "END") {
+        setwinner(true);
+      }
       setGame(data.game);
     }
   });
 
-  // console.log("guessPlayer", guessPlayer);
-  // console.log("homePlayer", homePlayer);
+  const result = (str1: string, str2: string) => {
+    if (selectedCard !== "?" && guessGuess !== "?")
+      return selectedCard === guessGuess;
+  };
+
+  const clearspace = () => {
+    setSelectedCard("");
+    setGuessGuess("");
+    setGenerataedData([]);
+    router.refresh();
+  };
+
   return (
     <main className="flex mobile:max-sm:flex-col-reverse relative  justify-between bg-bgGray mobile:max-sm:h-auto bigScreen:h-[calc(100vh-50px)] h-[calc(100vh-49px)] ">
       {/* ############ GAME AREA ########### */}
       <div className="py-4 px-8 w-full mobile:max-sm:px-2 mobile:max-sm:h-[calc(100vh-180px)] flex flex-col gap-5">
-        <div className=" flex justify-between w-full">
+        <div className=" flex justify-between  w-full">
           <div className="flex gap-2 mobile:max-sm:h-[4rem] ">
             <select
               name="Type"
               defaultValue="Words"
               id=""
-              className="border-themecolor  rounded px-2 cursor-pointer outline-none   text-themecolor border mobile:max-sm:w-[5rem] mobile:max-sm:px-0   w-[7rem] duration-300"
+              className="border-themecolor rounded px-2 cursor-pointer outline-none text-themecolor border mobile:max-sm:w-[5rem] mobile:max-sm:px-0 w-[7rem] duration-300"
               // value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
@@ -289,25 +349,11 @@ export default function Page() {
               <option value="Images">Images</option>
             </select>
 
-            {/* <select
-              name="Type"
-              defaultValue="cards"
-              id=""
-              className="border-themecolor  rounded px-2 cursor-pointer outline-none   text-themecolor border mobile:max-sm:w-[5rem] mobile:max-sm:px-0   w-[7rem] duration-300"
-            >
-              <option value="cards">cards</option>
-              <option value="animals">animals</option>
-              <option value="food">food</option>
-              <option value="cars">cars</option>
-              <option value="people">people</option>
-              <option value="birds">birds</option>
-            </select> */}
-
             <select
               name="Number"
               defaultValue="5"
               id=""
-              className="border-themecolor  rounded px-2 cursor-pointer outline-none   text-themecolor border  w-[4rem] duration-300"
+              className="border-themecolor rounded px-2 cursor-pointer outline-none text-themecolor border w-[4rem] duration-300"
               // value={numberOfOptions}
               onChange={(e) => setNumberOfOptions(+e.target.value)}
             >
@@ -319,10 +365,10 @@ export default function Page() {
               <option value="10">10</option>
             </select>
           </div>
-
+          <span>{generateStatus} </span>
           <div>
             <button
-              // onClick={handleGenerate}
+              onClick={clearspace}
               className=" border rounded-md mobile:max-sm:h-[4rem] border-themecolor hover:bg-themecolor hover:text-white transition-all duration-300 text-themecolor p-2"
             >
               Clear
@@ -350,21 +396,28 @@ export default function Page() {
           </div>
 
           <div className="flex gap-3 items-center justify-center">
-            <CopyToClipboard text={gameUrl} onCopy={handleCopy}>
-              <button
-                // onClick={handleCopy}
-                className="flex gap-1  items-center p-2  text-green-600"
-              >
-                <span className="text-green-600">
-                  {gameUrl ? gameUrl : "link to share"}
-                </span>
-                <PiCopySimpleLight size={20} />
-              </button>
-            </CopyToClipboard>
+            {!guessPlayer?.id && (
+              <Copy
+                gameUrl={gameUrl}
+                handleCopy={handleCopy}
+                image={selectedCard}
+              />
+            )}
+
+            {result(selectedCard, guessGuess) ? (
+              <span>
+                <FcCloseUpMode
+                  size={50}
+                  className="text-green-800 w-full mx-auto"
+                />{" "}
+              </span>
+            ) : (
+              <GrClose size={50} className="text-red-800 w-full mx-auto" />
+            )}
           </div>
 
           <div className="flex flex-col justify-center items-center">
-            <Card
+            <CardGuess
               image={guessGuess}
               text={guessGuess}
               className={"w-[80px] h-[80px] "}
@@ -406,7 +459,7 @@ export default function Page() {
 
       {/* ############ GAME AREA ########### */}
 
-      <div className="bg-white flex flex-col w-[240px] mobile:max-sm:w-full shadow-md  h-full px-2 py-4 gap-5">
+      <div className="bg-white flex flex-col w-[240px] mobile:max-sm:w-full shadow-md h-full px-2 py-4 gap-5">
         <Scores
           homePlayer={homePlayer}
           guessPlayer={guessPlayer}
@@ -434,7 +487,7 @@ export default function Page() {
           }}
           className="absolute z-40 h-full w-full mobile:max-sm:w-[80vw] bg-white "
         >
-          <div className="flex flex flex-col justify-center items-center w-full h-full">
+          <div className="flex  flex-col justify-center items-center w-full h-full">
             {IsWinner && (
               <Popups
                 title={"CONGRATULATIONS"}
@@ -465,7 +518,7 @@ export default function Page() {
           </div>
         </div>
       )}
-      {!EndOfRound && (
+      {EndOfRound && (
         <>
           <Overlay onClick={() => setEndOfRound((prev) => !prev)} transparent />
           <Popups

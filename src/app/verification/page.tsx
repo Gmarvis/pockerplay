@@ -8,17 +8,18 @@ import Image from "next/image";
 import { signupFn } from "@/utils/service/api-call";
 import RoundLoader from "@/components/atoms/RoundLoader";
 import { useRouter } from "next/navigation";
+
 import HomeNav from "@/components/organisms/HomeNav";
+import { useAppContext } from "../Context/AppContext";
 
 export default function Verification() {
   const router = useRouter();
   const [name, setName] = useState<string>("");
-  const [userData, setUserData] = useState<Partial<User>>();
-  const [currentGame] = useState<string>(() => {
-    if (typeof localStorage !== "undefined") {
-      return JSON.parse(localStorage.getItem("currentGameSession")!) || "";
-    } else return null;
-  });
+  // const [userData, setUserData] = useState<Partial<User>>();
+  // const currentGame =
+  // typeof localStorage !== "undefined" &&  localStorage.getItem("currentGameSession") ? localStorage.getItem("currentGameSession") : undefined;
+
+  const { currentGame, setIsGuess } = useAppContext();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,12 +33,14 @@ export default function Verification() {
       const user = await signupFn(data);
       if (user) {
         console.log(user);
-        setUserData(user);
+        // setUserData(user);
 
         localStorage.setItem("home_player", JSON.stringify(user));
         if (currentGame) {
-          router.push(`/dashboard/${currentGame}`);
+          setIsGuess(false);
+          return router.push(`/dashboard/${currentGame}`);
         }
+        console.log("not current game");
         router.push("/dashboard");
       }
     }
