@@ -1,6 +1,7 @@
 "use client";
-import Avatar from "../atoms/Avatar";
+// import Avatar from "../atoms/Avatar";
 import { RiMenu2Fill } from "react-icons/ri";
+import Avatar from "react-avatar";
 type Props = {
   onClick: () => void;
 };
@@ -26,7 +27,8 @@ export default function TopNav({ onClick }: Props) {
           {/* <span className=" ml-5">{conStatus} </span> */}
         </div>
 
-        <Avatar profilePicture={homePlayer.image} size={4} />
+        {/* <Avatar profilePicture={homePlayer.image} size={4} /> */}
+        <Avatar name={homePlayer.username} size="40" round={true} />
       </nav>
     </div>
   );
