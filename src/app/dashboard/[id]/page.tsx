@@ -30,6 +30,7 @@ import CardGuess from "@/components/atoms/CardGuess";
 import { RiRoundedCorner } from "react-icons/ri";
 import RoundLoader from "@/components/atoms/RoundLoader";
 import Statistics from "@/components/organisms/Insights/Statistcs";
+import SqLoader from "@/components/atoms/SqLoader";
 
 export default function Page() {
   const router = useRouter();
@@ -380,7 +381,7 @@ export default function Page() {
               name="Number"
               defaultValue="5"
               id="nomber"
-              className="border rounded-md mobile:max-sm:h-[4rem] border-themecolor hover:bg-themecolor hover:text-white transition-all duration-300 text-themecolor p-2 m-2"
+              className="border rounded-md  border-themecolor hover:bg-themecolor hover:text-white transition-all duration-300 text-themecolor p-2 m-2"
               // value={numberOfOptions}
               onChange={(e) => setNumberOfOptions(+e.target.value)}
             >
@@ -400,19 +401,23 @@ export default function Page() {
             )}
           </div>
           <div className=" flex items-center">
-            {generate && <RoundLoader />}
-            <button
-              onClick={clearspace}
-              className=" border rounded-md mobile:max-sm:h-[4rem] border-themecolor hover:bg-themecolor hover:text-white transition-all duration-300 text-themecolor p-2 m-2"
-            >
-              Clear
-            </button>
-            <button
-              onClick={handleGenerate}
-              className=" border rounded-md mobile:max-sm:h-[4rem] border-themecolor hover:bg-themecolor hover:text-white transition-all duration-300 text-themecolor p-2"
-            >
-              🃏 Generate
-            </button>
+            {/* {generate && <RoundLoader />} */}
+
+            {!generatedData.length ? (
+              <button
+                onClick={handleGenerate}
+                className="hover:bg-[#140e1fbc] bg-themecolor w-[6rem] flex items-center gap-2  duration-300 rounded shadow-md p-2 justify-center  hover:text-white text-white"
+              >
+                Generate
+              </button>
+            ) : (
+              <button
+                onClick={clearspace}
+                className=" border rounded-md w-[6rem] border-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-red-500 p-2 "
+              >
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
@@ -500,7 +505,7 @@ export default function Page() {
           </div>
         </div>
         {/* ###### Cards section ##### */}
-        <div className="w-full flex items-center justify-center gap-2 p-2 flex-wrap h-[40vh] bigScreen:h-[60vh] rounded border border-themecolor">
+        <div className="w-full flex items-center justify-center gap-2 p-2 flex-wrap h-[40vh] bigScreen:h-[60vh] relative rounded border border-themecolor">
           {generatedData.map((data, index) => (
             <Card
               key={index}
@@ -511,9 +516,10 @@ export default function Page() {
               category={category}
             />
           ))}
+          <div className="bg-red-600 absolute">{generate && <SqLoader />}</div>
         </div>
         {/* ###### Cards section ##### */}
-        <div className=" my-2 py-2 mx-auto">
+        <div className=" py-2 mx-auto">
           {/* {homePlayer ? guessPlayerHint : guessPlayer ? homeplayerHint : null} */}
         </div>
         <textarea

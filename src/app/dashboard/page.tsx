@@ -26,6 +26,7 @@ export default function Page() {
   };
 
   const createNewGame = () => {
+    setIsLoading(true);
     if (homePlayer) socket.emit("init", { home_player_id: homePlayer.id });
   };
 
