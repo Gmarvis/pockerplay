@@ -16,8 +16,8 @@ export default function Scores(props: Props) {
           <span>{props.homePlayer?.username?.split(" ")[0] ?? "You"}</span>
         </div>
         <div>
-          <p>
-            {props.score?.home_player_score ?? "0"} :
+          <p className="flex gap-2 justify-between">
+            {props.score?.home_player_score ?? "0"}:
             {props.score?.guess_player_score ?? "0"}
           </p>
         </div>

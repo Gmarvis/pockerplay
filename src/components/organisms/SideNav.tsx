@@ -12,6 +12,7 @@ import Image from "next/image";
 // import { useNavigate } from "react-router-dom";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/app/Context/AppContext";
+import { MdGames } from "react-icons/md";
 
 export default function SideNav() {
   const router = useRouter();
@@ -35,14 +36,22 @@ export default function SideNav() {
           </Link>
         </div>
         <div>
-          <div>
-            <button className="hover:bg-white border-b border-b-1 border-b-slate-400 duration-300 text-white w-full p-2  hover:text-themecolor">
-              New Game
+          <div className="flex flex-col w-full items-center">
+            <button
+              onClick={() => {
+                router.push("/dashboard");
+              }}
+              className="hover:bg-[#140e1fbc] bg-[#422b6abc] flex items-center gap-2  duration-300 rounded shadow-md w-[80%] p-2 justify-center  hover:text-white text-white"
+            >
+              <MdGames />
+              <span>New Game</span>
             </button>
           </div>
-          <div className=" px-2 flex flex-col justify-center items-center">
+          <div className=" px-2 pt-5 flex flex-col justify-center items-center">
             {" "}
-            <h2 className=" text-center">users</h2>
+            {myDms.length > 1 && (
+              <h2 className=" text-center text-white">users</h2>
+            )}
             {myDms.length
               ? myDms?.map((user: Partial<User>, i: number) => (
                   <span
@@ -70,7 +79,7 @@ export default function SideNav() {
           }
           localStorage.clear();
         }}
-        className="flex items-center justify-center  py-1 hover:bg-white duration-300  hover:text-themecolor w-full text-white gap-3 px-4"
+        className="hover:bg-[#140e1fbc] bg-[#422b6abc] flex items-center gap-2  duration-300 rounded shadow-md w-[80%] p-2 justify-center  hover:text-white text-white"
       >
         <CiLogout /> <span>logout</span>
       </button>
