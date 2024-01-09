@@ -16,7 +16,7 @@ const Copy = ({ gameUrl, handleCopy, image }: Props) => {
           className="flex gap-1  items-center p-2  text-green-600"
         >
           <span className="text-green-600">
-            {gameUrl ? gameUrl : "link to share"}
+            {gameUrl ? "link to share" : ""}
           </span>
         </button>
       </CopyToClipboard>
