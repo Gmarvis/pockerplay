@@ -17,14 +17,6 @@ export default function Page() {
     } else return null;
   });
 
-  const handleCopy = () => {
-    toast.success("Copied!", {
-      position: "top-right",
-      hideProgressBar: true,
-      autoClose: 3000,
-    });
-  };
-
   const createNewGame = () => {
     setIsLoading(true);
     if (homePlayer) socket.emit("init", { home_player_id: homePlayer.id });
@@ -35,7 +27,7 @@ export default function Page() {
       if (data.state === "new game") {
         toast.success("new game created!", {
           position: "top-right",
-          hideProgressBar: false,
+          hideProgressBar: true,
           autoClose: 3000,
         });
         router.push(`/dashboard/${data.game}`);
