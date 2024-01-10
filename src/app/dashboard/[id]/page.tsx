@@ -459,11 +459,11 @@ export default function Page() {
                 "hidden"
               }`}
             >
-              <CopyToClipboard text={gameUrl} onCopy={handleCopy}>
-                <button
-                  onClick={() => handleCopy("Copied!")}
-                  className="flex gap-1  items-center p-2  text-green-600"
-                >
+              <CopyToClipboard
+                text={gameUrl}
+                onCopy={() => handleCopy("Copied!")}
+              >
+                <button className="flex gap-1  items-center p-2  text-green-600">
                   <span className="text-green-600">
                     {gameUrl ? "copy game link" : ""}
                   </span>
@@ -614,3 +614,9 @@ export default function Page() {
     </main>
   );
 }
+
+/* ===> *************** TODO****************** */
+/* ===> ***** notify user on game over and show who | */
+/* ===> ***** notify user at end of a round ******* */
+/* ===> ***** clear cards befor the beginning of a round ***/
+/* ===> *************** TODO****************** */
